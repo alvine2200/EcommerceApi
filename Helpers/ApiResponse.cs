@@ -3,6 +3,8 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Net;
 using System.Threading.Tasks;
+using EcommerceApi.Helpers;
+using Microsoft.AspNetCore.Mvc;
 
 namespace EcommerceApi.Helpers
 {
