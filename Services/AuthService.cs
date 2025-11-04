@@ -10,6 +10,7 @@ using static System.Net.Mime.MediaTypeNames;
 using EcommerceApi.Dtos;
 using EcommerceApi.Models;
 using EcommerceApi.Mapper;
+using EcommerceApi.Exceptions;
 
 namespace EcommerceApi.Services
 {
@@ -61,12 +62,13 @@ namespace EcommerceApi.Services
             };
         }
 
-        public async Task<AuthResponseDto?> LoginAsync(LoginDto dto)
+        public async Task<AuthResponseDto> LoginAsync(LoginDto dto)
         {
             var user = await _userRepository.GetByEmailAsync(dto.email);
             if (user == null || !BCrypt.Net.BCrypt.Verify(dto.password, user.Password))
-                return null;
-
+            {
+                throw new NotFoundException("Invalid email or password");
+            }
             var (token, expires) = _jwtHelper.GenerateJwtToken(user);
             var (refreshToken, refreshExpires) = _jwtHelper.GenerateRefreshToken();
 

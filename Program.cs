@@ -128,7 +128,3 @@ app.UseAuthorization();
 app.MapControllers();
 
 app.Run();
-
-internal interface IPermissionRepository
-{
-}

@@ -18,10 +18,19 @@ namespace EcommerceApi.Repository
             _context = context;
         }
 
-        public async Task<List<Role>> GetRolesByNamesAsync(List<RoleEnum> names) =>
-            await _context.Roles.Where(r => names.Contains(r.Name!.Value)).ToListAsync();
+        public async Task<List<Role>> GetRolesByNamesAsync(List<RoleEnum> names)
+        {
+            return await _context.Roles.Where(r => names.Contains(r.Name!.Value)).ToListAsync();
+        }
 
-        public async Task<Role?> GetByNameAsync(RoleEnum name) =>
-            await _context.Roles.FirstOrDefaultAsync(r => r.Name == name);
+        public async Task<Role?> GetByNameAsync(RoleEnum name)
+        {
+            return await _context.Roles.FirstOrDefaultAsync(r => r.Name == name);
+        }
+
+        public async Task<Role?> GetByIdAsync(Guid id)
+        {
+            return await _context.Roles.FirstOrDefaultAsync(r => r.Id == id);
+        }
     }
 }

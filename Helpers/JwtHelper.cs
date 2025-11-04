@@ -23,7 +23,7 @@ namespace EcommerceApi.Helpers
         {
             var jwtSettings = _config.GetSection("JwtSettings");
 
-            var key = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(jwtSettings["SecretKey"]));
+            var key = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(jwtSettings["SecretKey"]!));
             var creds = new SigningCredentials(key, SecurityAlgorithms.HmacSha256);
 
             var claims = new List<Claim>
@@ -38,7 +38,7 @@ namespace EcommerceApi.Helpers
             {
                 foreach (var role in user.Roles)
                 {
-                    claims.Add(new Claim(ClaimTypes.Role, role.Name.ToString()));
+                    claims.Add(new Claim(ClaimTypes.Role, role.Name.ToString()!));
                 }
             }
 
@@ -66,7 +66,7 @@ namespace EcommerceApi.Helpers
         public ClaimsPrincipal? GetPrincipalFromExpiredToken(string token)
         {
             var jwtSettings = _config.GetSection("JwtSettings");
-            var key = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(jwtSettings["SecretKey"]));
+            var key = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(jwtSettings["SecretKey"]!));
 
             var tokenValidationParameters = new TokenValidationParameters
             {

@@ -11,5 +11,6 @@ namespace EcommerceApi.Interfaces
     {
         Task<List<Role>> GetRolesByNamesAsync(List<RoleEnum> names);
         Task<Role?> GetByNameAsync(RoleEnum name);
+        Task<Role?> GetByIdAsync(Guid id);
     }
 }

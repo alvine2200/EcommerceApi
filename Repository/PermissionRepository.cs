@@ -3,10 +3,10 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
 using EcommerceApi.Context;
+using EcommerceApi.Exceptions;
 using EcommerceApi.Interfaces;
 using EcommerceApi.Models;
-using EcommerceApi.Models;
-using EcommerceApi.Models;
+using Microsoft.EntityFrameworkCore;
 
 namespace EcommerceApi.Repository
 {
@@ -23,16 +23,43 @@ namespace EcommerceApi.Repository
             _roleRepository = roleRepository;
             _userRepository = userRepository;
         }
-        public async Task<bool> UserHasPermissionAsync(Guid userId, string permissionName)
-        {
 
+
+        public async Task<bool> UserHasPermissionAsync(Guid userId, Guid permissionId)
+        {
             User? user = _userRepository.GetByIdAsync(userId).Result;
             if (user == null)
             {
-                throw new Exception("User not found");
+                throw new NotFoundException("User not found");
             }
-            // Implement logic to check if the user has the specified permission
-            throw new NotImplementedException();
+            var userRoles = user.Roles;
+            foreach (var role in userRoles)
+            {
+                var permissions = await GetPermissionsByRoleIdAsync(role.Id);
+                if (permissions.Any(p => p.Id == permissionId))
+                {
+                    return true;
+                }
+            }
+            return false;
+        }
+
+
+        public async Task<List<Permission>> GetPermissionsByRoleIdAsync(Guid roleId)
+        {
+            Role? role = await _roleRepository.GetByIdAsync(roleId);
+            if (role == null)
+            {
+                throw new NotFoundException("Role not found");
+            }
+            var permissions = role.Permissions;
+            return permissions.ToList();
+        }
+
+        public Task<Permission?> GetByNameAsync(string name)
+        {
+            return _context.Permissions.FirstOrDefaultAsync(p => p.Name.ToString() == name);
         }
     }
+
 }
