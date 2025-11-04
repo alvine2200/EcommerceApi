@@ -3,25 +3,24 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
 using EcommerceApi.Helpers;
-using Microsoft.AspNetCore.Http;
-using Microsoft.Extensions.Logging;
 using System.Net;
 using System.Text.Json;
+using EcommerceApi.Exceptions;
 
 namespace EcommerceApi.Middleware
 {
-    public class ErrorHandlerMiddleware
+    public class ExceptionMiddleware
     {
         private readonly RequestDelegate _next;
-        private readonly ILogger<ErrorHandlerMiddleware> _logger;
+        private readonly ILogger<ExceptionMiddleware> _logger;
 
-        public ErrorHandlerMiddleware(RequestDelegate next, ILogger<ErrorHandlerMiddleware> logger)
+        public ExceptionMiddleware(RequestDelegate next, ILogger<ExceptionMiddleware> logger)
         {
             _next = next;
             _logger = logger;
         }
 
-        public async Task Invoke(HttpContext context)
+        public async Task InvokeAsync(HttpContext context)
         {
             try
             {
@@ -29,17 +28,44 @@ namespace EcommerceApi.Middleware
             }
             catch (Exception ex)
             {
-                _logger.LogError(ex, "Unhandled exception occurred");
-
-                context.Response.ContentType = "application/json";
-                context.Response.StatusCode = (int)HttpStatusCode.InternalServerError;
-
-                var response = ApiResponse<string>.ServerError(ex.Message);
-                var json = JsonSerializer.Serialize(response);
-
-                await context.Response.WriteAsync(json);
+                _logger.LogError(ex, "Unhandled exception occurred.");
+                await HandleExceptionAsync(context, ex);
             }
         }
-    }
 
+        private static async Task HandleExceptionAsync(HttpContext context, Exception ex)
+        {
+            context.Response.ContentType = "application/json";
+            ApiResponse<object> response;
+
+            switch (ex)
+            {
+                case NotFoundException nf:
+                    context.Response.StatusCode = (int)HttpStatusCode.NotFound;
+                    response = ApiResponse<object>.Fail(HttpStatusCode.NotFound, nf.Message);
+                    break;
+
+                case UnauthorizedException un:
+                    context.Response.StatusCode = (int)HttpStatusCode.Unauthorized;
+                    response = ApiResponse<object>.Fail(HttpStatusCode.Unauthorized, un.Message);
+                    break;
+
+                case ValidationException ve:
+                    context.Response.StatusCode = (int)HttpStatusCode.BadRequest;
+                    response = new ApiResponse<object>(
+                        HttpStatusCode.BadRequest,
+                        ve.Message,
+                        ve.Errors
+                    );
+                    break;
+
+                default:
+                    context.Response.StatusCode = (int)HttpStatusCode.InternalServerError;
+                    response = ApiResponse<object>.ServerError(ex.Message);
+                    break;
+            }
+
+            await context.Response.WriteAsync(JsonSerializer.Serialize(response));
+        }
+    }
 }

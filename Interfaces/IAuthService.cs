@@ -11,5 +11,7 @@ namespace EcommerceApi.Interfaces
     {
         Task<AuthResponseDto> LoginAsync(LoginDto dto);
         Task<AuthResponseDto> RegisterAsync(RegisterDto dto);
+        Task<UserResponseDto?> GetCurrentUserAsync(string userId);
+        Task<AuthResponseDto> RefreshTokenAsync(string refreshToken);
     }
 }
