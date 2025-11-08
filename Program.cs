@@ -5,14 +5,12 @@ using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.IdentityModel.Tokens;
 using EcommerceApi.Repository;
 using EcommerceApi.Services;
+using EcommerceApi.Context;
+using Microsoft.EntityFrameworkCore;
 
 var builder = WebApplication.CreateBuilder(args);
 
-// ==========================================================
-// 1️⃣ Add services to the container
-// ==========================================================
 
-// Enable CORS for frontend (adjust origin for your app)
 builder.Services.AddCors(options =>
 {
     options.AddPolicy("AllowFrontend", policy =>
@@ -24,10 +22,8 @@ builder.Services.AddCors(options =>
     });
 });
 
-// Add controllers
 builder.Services.AddControllers();
 
-// Register Swagger with JWT support
 builder.Services.AddEndpointsApiExplorer();
 builder.Services.AddSwaggerGen(options =>
 {
@@ -38,7 +34,6 @@ builder.Services.AddSwaggerGen(options =>
         Description = "Secure E-commerce API with JWT Authentication"
     });
 
-    // JWT Authorization for Swagger
     var jwtSecurityScheme = new Microsoft.OpenApi.Models.OpenApiSecurityScheme
     {
         Scheme = "bearer",
@@ -61,9 +56,7 @@ builder.Services.AddSwaggerGen(options =>
     });
 });
 
-// ==========================================================
-// 2️⃣ JWT Authentication Configuration
-// ==========================================================
+
 var jwtSettings = builder.Configuration.GetSection("JwtSettings");
 var key = Encoding.UTF8.GetBytes(jwtSettings["SecretKey"] ?? throw new Exception("JWT SecretKey missing in configurations"));
 
@@ -88,28 +81,20 @@ builder.Services.AddAuthentication(options =>
     };
 });
 
-// ==========================================================
-// 3️⃣ Dependency Injection
-// ==========================================================
-
-// Register custom helpers and services
 builder.Services.AddScoped<JwtHelper>();
 
-// Example: register repositories or services
 builder.Services.AddScoped<IUserRepository, UserRepository>();
 builder.Services.AddScoped<IAuthService, AuthService>();
 builder.Services.AddScoped<IRoleRepository, RoleRepository>();
 builder.Services.AddScoped<IPermissionRepository, PermissionRepository>();
 
+// Register Application DbContext
+builder.Services.AddDbContext<ApplicationContext>(options =>
+    options.UseNpgsql(builder.Configuration.GetConnectionString("DefaultConnection")));
 
-// ==========================================================
-// 4️⃣ Build app
-// ==========================================================
+
 var app = builder.Build();
 
-// ==========================================================
-// 5️⃣ Configure HTTP Request Pipeline
-// ==========================================================
 if (app.Environment.IsDevelopment())
 {
     app.UseSwagger();
@@ -118,10 +103,8 @@ if (app.Environment.IsDevelopment())
 
 app.UseHttpsRedirection();
 
-// Enable CORS for frontend
 app.UseCors("AllowFrontend");
 
-// Enable Authentication & Authorization
 app.UseAuthentication();
 app.UseAuthorization();
 
